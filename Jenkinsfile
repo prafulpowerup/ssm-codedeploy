@@ -631,8 +631,12 @@ pipeline {
     stage('CloudFront invalidations') {
       steps {
       sh '''
+<<<<<<< HEAD:Jenkinsfile.groovy
         #send http post request to api with event BUCKET_NAME with lambda intregration
         curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://xxxxxxx.execute-api.<aws-region>.amazonaws.com/<stage>
+=======
+        curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://<api-name>.<api-gateway-name>.<aws-region>.amazonaws.com/<stage>
+>>>>>>> 6f7b3f466fa0546fa4dcfbee443da335ad379c78:Jenkinsfile
         EXIT_STATUS=$?
         echo ${EXIT_STATUS}
         if [ ${EXIT_STATUS} -eq 0 ]; then
