@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: changedir
+hooks:
+  ApplicationStop:
+    - location: .codedeploy-scripts/check_directory.sh
+      timeout: 120
+      runas: root
+  BeforeInstall:
+    - location: .codedeploy-scripts/remove_files.sh
+      timeout: 120
+      runas: specdeploy
+  AfterInstall:
+    - location: .codedeploy-scripts/change_permission.sh
+      timeout: 120
+      runas: root
+    - location: .codedeploy-scripts/linker.sh
+      timeout: 120
+      runas: specdeploy
