@@ -60,13 +60,18 @@ pipeline {
              aws s3 cp $i s3://${BUCKET}/sql-automation/ --region ${REGION} 
             done
           
+            #RUN SSM RUN Command
             sh_command_id=$(aws ssm send-command --document-name "Run_SQL" --targets "Key=instanceids,Values=${INSTANCE_ID}" --parameters '{"workingDirectory":["'"${WORKING_DIRECTORY_REDIS_FLUSH}"'"],"executionTimeout":["500"],"s3Bucket":["'"${BUCKET}"'"],"region":["'"${REGION}"'"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --cloud-watch-output-config '{"CloudWatchOutputEnabled":true}' --region ${REGION} --output text --query "Command.CommandId");
             sleep 150
+            
+            #check output of the command
             OUTPUT=$(aws ssm list-command-invocations --command-id "$sh_command_id" --details --region ${REGION} --query "CommandInvocations[].CommandPlugins[].{Status:Status,Output:Output}")
-    
+            
+            #get status of the output
             FINAL_OUTPUT=$(echo $OUTPUT | jq '.[] | .Status')
             SUCCESS='"Success"'
-          
+           
+            #check if status is SUCCESS
             if [ ${FINAL_OUTPUT} = ${SUCCESS} ]
              then
               echo "SQL script executed Successfully for MODMAN"
@@ -197,10 +202,14 @@ pipeline {
              aws s3 cp $i s3://${BUCKET}/sql-automation-reusables/ --region ${REGION} 
             done
           
+            #RUN SSM RUN Command
             sh_command_id=$(aws ssm send-command --document-name "Run_SQL_REUSABLES" --targets "Key=instanceids,Values=${INSTANCE_ID}" --parameters '{"workingDirectory":["'"${WORKING_DIRECTORY_REDIS_FLUSH}"'"],"executionTimeout":["500"],"s3Bucket":["'"${BUCKET}"'"],"region":["'"${REGION}"'"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --cloud-watch-output-config '{"CloudWatchOutputEnabled":true}' --region ${REGION} --output text --query "Command.CommandId");
             sleep 150
+            
+            #check output of the command
             OUTPUT=$(aws ssm list-command-invocations --command-id "$sh_command_id" --details --region ${REGION} --query "CommandInvocations[].CommandPlugins[].{Status:Status,Output:Output}")
-    
+            
+            #get status of the output
             FINAL_OUTPUT=$(echo $OUTPUT | jq '.[] | .Status')
             SUCCESS='"Success"'
           
@@ -333,10 +342,14 @@ pipeline {
         if ("${params.FLUSH_REDIS}" == "true") {
       withCredentials([string(credentialsId: 'ADMIN_INSTANCE_ID', variable: 'ADMIN_INSTANCE_ID')]) {
       sh '''
+        #SSM RUN Command
         sh_command_id=$(aws ssm send-command --document-name "Redis-Flush" --targets "Key=instanceids,Values=${ADMIN_INSTANCE_ID}" --parameters '{"workingDirectory":["'"${WORKING_DIRECTORY_REDIS_FLUSH}"'"],"executionTimeout":["360"],"dbNumber":["'"$DB_NUMBER"'"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --cloud-watch-output-config '{"CloudWatchOutputEnabled":true}' --region ${REGION} --output text --query "Command.CommandId");
         sleep 50
+
+        #get output of the Command
         OUTPUT=$(aws ssm list-command-invocations --command-id "$sh_command_id" --details --region ${REGION} --query "CommandInvocations[].CommandPlugins[].{Status:Status}")
 
+        #Check status of the SSM run command
         FINAL_OUTPUT=$(echo $OUTPUT | jq '.[] | .Status')
 
         SUCCESS='"Success"'
@@ -618,6 +631,7 @@ pipeline {
     stage('CloudFront invalidations') {
       steps {
       sh '''
+        #send http post request to api with event BUCKET_NAME with lambda intregration
         curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://xxxxxxx.execute-api.<aws-region>.amazonaws.com/<stage>
         EXIT_STATUS=$?
         echo ${EXIT_STATUS}
