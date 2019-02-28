@@ -618,7 +618,7 @@ pipeline {
     stage('CloudFront invalidations') {
       steps {
       sh '''
-        curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://xxxxxxx.execute-api.<aws-region>.amazonaws.com/<stage>
+        curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://<api-name>.<api-gateway-name>.<aws-region>.amazonaws.com/<stage>
         EXIT_STATUS=$?
         echo ${EXIT_STATUS}
         if [ ${EXIT_STATUS} -eq 0 ]; then
