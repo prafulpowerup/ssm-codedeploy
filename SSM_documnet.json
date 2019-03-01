@@ -40,7 +40,7 @@
           "DB_ENDPOINT=$(echo $(xmllint myxml.xml --xpath \"/connection/host/text()\"))",
           "DB_USERNAME=$(echo $(xmllint myxml.xml --xpath \"/connection/username/text()\"))",
           "DB_PASSWORD=$(echo $(xmllint myxml.xml --xpath \"/connection/password/text()\"))",
-          "DB_NAME=$(echo $(xmllint local.xml --xpath \"/connection/dbname/text()\"))",
+          "DB_NAME=$(echo $(xmllint myxml.xml --xpath \"/connection/dbname/text()\"))",
           "mysql -h $DB_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD $DB_NAME <$i",
           "if [ $? -eq 1 ]; then",
           "exit 1",
