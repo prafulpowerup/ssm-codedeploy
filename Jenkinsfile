@@ -311,9 +311,12 @@ pipeline {
                 echo "Deployment Failed for REUSABLES..!!"
                 echo "Redeploymnet of Modman with last successfull build  is Carring out "
                 #getting last successful deploymnet id of the Modman
-                LAST_SUCCESS_ID_MODMAN=$(aws deploy list-deployments --application-name ${CODEDEPLOY_APPLICATION} --deployment-group-name ${CODEDEPLOY_DEPLOYMENTGROUP_MODMAN} --include-only-statuses Succeeded --region ${REGION} --query deployments[1] --output text);
+                LAST_SUCCESS_ID_MODMAN=$(aws deploy list-deployments --application-name ${CODEDEPLOY_APPLICATION} \
+                --deployment-group-name ${CODEDEPLOY_DEPLOYMENTGROUP_MODMAN} --include-only-statuses Succeeded \
+                --region ${REGION} --query deployments[1] --output text);
                 #get the key of prevously successful deployment
-                KEY=$(aws deploy get-deployment --deployment-id ${LAST_SUCCESS_ID_MODMAN} --region ${REGION} --query deploymentInfo.revision.s3Location.key);
+                KEY=$(aws deploy get-deployment --deployment-id ${LAST_SUCCESS_ID_MODMAN} --region ${REGION} \
+                --query deploymentInfo.revision.s3Location.key);
       
                 #carry out the deploymnet with the new key again for Modman
                 ROLLBACK_DEPLOYMENT=$(aws deploy create-deployment --application-name ${CODEDEPLOY_APPLICATION} \
