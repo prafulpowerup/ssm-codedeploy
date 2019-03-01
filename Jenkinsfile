@@ -149,7 +149,7 @@ pipeline {
               
              // Deploying through CodeDeploy
               DEPLOYMENT=sh (
-                script: "aws deploy create-deployment --application-name $CODEDEPLOY_APPLICATION --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name $CODEDEPLOY_DEPLOYMENTGROUP_MODMAN --description \"Deployment through Jenkins $JOB_NAME $BUILD_NUMBER\" --s3-location bucket=$BUCKET,bundleType=zip,key=$CODEDEPLOY_APPLICATION/$CODEDEPLOY_DEPLOYMENTGROUP_MODMAN/$ZIPFILE --region $REGION --output text",
+                script: "aws deploy create-deployment --application-name $CODEDEPLOY_APPLICATION --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name $CODEDEPLOY_DEPLOYMENTGROUP_MODMAN --description \"Deployment through Jenkins $JOB_NAME $BUILD_NUMBER\"  --s3-location bucket=$BUCKET,bundleType=zip,key=$CODEDEPLOY_APPLICATION/$CODEDEPLOY_DEPLOYMENTGROUP_MODMAN/$ZIPFILE --region $REGION --output text",
                 returnStdout: true
               ).trim()
               
@@ -310,17 +310,20 @@ pipeline {
                 #If the deployment fails, rollback to the last succeeded deployment for Reusables is Automated
                 echo "Deployment Failed for REUSABLES..!!"
                 echo "Redeploymnet of Modman with last successfull build  is Carring out "
-
+                #getting last successful deploymnet id of the Modman
                 LAST_SUCCESS_ID_MODMAN=$(aws deploy list-deployments --application-name ${CODEDEPLOY_APPLICATION} --deployment-group-name ${CODEDEPLOY_DEPLOYMENTGROUP_MODMAN} --include-only-statuses Succeeded --region ${REGION} --query deployments[1] --output text);
+                #get the key of prevously successful deployment
                 KEY=$(aws deploy get-deployment --deployment-id ${LAST_SUCCESS_ID_MODMAN} --region ${REGION} --query deploymentInfo.revision.s3Location.key);
-
+      
+                #carry out the deploymnet with the new key again for Modman
                 ROLLBACK_DEPLOYMENT=$(aws deploy create-deployment --application-name ${CODEDEPLOY_APPLICATION} \
                 --deployment-config-name CodeDeployDefault.OneAtATime \
                 --deployment-group-name ${CODEDEPLOY_DEPLOYMENTGROUP_MODMAN} \
                 --description "Deployment through Jenkins ${JOB_NAME} ${BUILD_NUMBER}" \
                 --s3-location bucket=${BUCKET},bundleType=zip,key=${KEY} \
                 --region ${REGION} --output text);
-  
+                
+                #check for the deploymnet status
                 aws deploy wait deployment-successful --deployment-id ${ROLLBACK_DEPLOYMENT} --region ${REGION}
                 EXIT_STATUS=$?
                 echo ${EXIT_STATUS}
@@ -631,12 +634,8 @@ pipeline {
     stage('CloudFront invalidations') {
       steps {
       sh '''
-<<<<<<< HEAD:Jenkinsfile.groovy
         #send http post request to api with event BUCKET_NAME with lambda intregration
-        curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://xxxxxxx.execute-api.<aws-region>.amazonaws.com/<stage>
-=======
         curl --request POST --data '{"BUCKET_NAME":"'"${BUCKET_STATIC_ASSETS}"'"}' https://<api-name>.<api-gateway-name>.<aws-region>.amazonaws.com/<stage>
->>>>>>> 6f7b3f466fa0546fa4dcfbee443da335ad379c78:Jenkinsfile
         EXIT_STATUS=$?
         echo ${EXIT_STATUS}
         if [ ${EXIT_STATUS} -eq 0 ]; then
